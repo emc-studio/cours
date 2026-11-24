@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EMC Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a studio's front door, short and welcoming
+   IDEA: a patch where each course is an object box fed by one source, EMC Studio
+   PICTURE: course cards hanging off a single signal cord
+   COLOUR and TYPE: paper, Max grey, highlighter yellow, signal yellow-green; Archivo / Inter / JetBrains Mono
+   LAYOUT: big title, one line of intro, course cards */
+:root{color-scheme:light dark;--bg:light-dark(#f6f5f1,#16171a);--ink:light-dark(#1b1c1f,#ecebe6);--mut:light-dark(#5b5d64,#a5a6ad);
+--card:light-dark(#fff,#212327);--line:light-dark(#dddbd2,#33353b);--hl:#fff200;--sp:light-dark(#2f3fa0,#9aa6ff)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,60px) max(5vw,16px)}
+.wrap{max-width:1000px;margin:0 auto}
+.src{display:inline-block;background:#333;color:#f5c96a;font:600 15px "JetBrains Mono",monospace;padding:4px 12px;border-radius:3px;margin-bottom:18px}
+.src em{color:#eee;font-style:normal}
+h1{font:800 clamp(36px,6vw,60px)/1.02 Archivo,Inter,sans-serif;margin:0 0 14px;text-wrap:balance}
+.lead{font-size:18px;max-width:60ch;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:18px;position:relative}
+.course{display:block;background:var(--card);border:1px solid var(--line);border-top:4px dashed #b9cc2e;border-radius:12px;padding:20px 22px;color:inherit;text-decoration:none;transition:transform .2s,border-color .2s}
+.course:hover{transform:translateY(-3px);border-color:var(--ink);border-top-color:#b9cc2e}
+a:focus-visible{outline:3px solid var(--sp);outline-offset:2px}
+.tag{background:var(--hl);color:#1b1c1f;padding:1px 8px;font-weight:600;font-size:14px}
+.course h2{font:800 24px/1.12 Archivo,Inter,sans-serif;margin:10px 0 6px}
+.course p{margin:0}
+.course .go{display:block;margin-top:14px;font-weight:600;color:var(--sp)}
+footer{color:var(--mut);font-size:14px;border-top:1px solid var(--line)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="band">
+ <div class="wrap">
+  <span class="src">emc~ <em>studio</em></span>
+  <h1>EMC · Electronic &amp; Multimedia Composition</h1>
+  <p class="lead">Les supports des cours : patchs commentés, rappels sur les objets, et pistes pour aller plus loin.</p>
+ </div>
+</header>
+<main class="band" style="padding-top:0">
+ <div class="wrap grid" id="grid"></div>
+</main>
+<footer class="band"><div class="wrap">EMC Studio · Electronic &amp; Multimedia Composition · <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.fr">CC0 1.0</a> (domaine public)</div></footer>
+<script>
+{
+/* Ajouter un cours = ajouter une entrée à cette liste */
+const courses=[
+ {title:'Musique électronique',level:'MA',desc:'Supports de cours',href:'e-music-ma/'},
+ {title:'Musique électronique',level:'BA',desc:'Supports de cours',href:'e-music-ba/'},
+ {title:'Interfaces',level:'',desc:'Supports de cours',href:'interfaces/'},
+ {title:'Concepts & création',level:'',desc:'Supports de cours',href:'concepts-et-creation/'}
+];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+document.getElementById('grid').innerHTML=courses.map(c=>`<a class="course" href="${esc(c.href)}">${c.level?`<span class="tag">${esc(c.level)}</span>`:''}<h2>${esc(c.title)}</h2><p>${esc(c.desc)}</p><span class="go">Voir les cours →</span></a>`).join('');
+}
+</script>
+</body>
+</html>

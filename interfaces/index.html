@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interfaces · EMC Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a course shelf, friendly and orderly
+   IDEA: a Max patcher where each course is an object box, joined by a signal cord in time order
+   PICTURE: the timeline of courses as patch cords and boxes
+   COLOUR and TYPE: same as course pages: paper, Max grey, highlighter yellow; Archivo / Inter / JetBrains Mono
+   LAYOUT: header, filters, list of courses newest first */
+:root{color-scheme:light dark;--bg:light-dark(#f6f5f1,#16171a);--ink:light-dark(#1b1c1f,#ecebe6);--mut:light-dark(#5b5d64,#a5a6ad);
+--card:light-dark(#fff,#212327);--line:light-dark(#dddbd2,#33353b);--hl:#fff200;--sp:light-dark(#2f3fa0,#9aa6ff)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,60px) max(5vw,16px)}
+.wrap{max-width:1000px;margin:0 auto}
+h1{font:800 clamp(34px,5vw,52px)/1.05 Archivo,Inter,sans-serif;margin:0 0 14px;text-wrap:balance}
+.lead{font-size:18px;max-width:62ch;margin:0}
+.crumb{color:var(--mut);font-size:14px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}.crumb a{color:var(--sp)}
+.lead{margin-bottom:26px!important}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 8px}
+.filters button{font:600 15px Inter,sans-serif;min-height:44px;padding:0 18px;border-radius:99px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.filters button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+button:focus-visible,a:focus-visible{outline:3px solid var(--sp);outline-offset:2px}
+.list{position:relative;list-style:none;margin:0;padding:0 0 0 34px}
+.list::before{content:"";position:absolute;left:11px;top:10px;bottom:10px;border-left:3px dashed #b9cc2e}
+.list li{position:relative;margin:18px 0}
+.list li::before{content:"";position:absolute;left:-30px;top:26px;width:16px;height:16px;border-radius:3px;background:#333;border:2px solid #b9cc2e}
+.course{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;color:inherit;text-decoration:none;transition:transform .2s,border-color .2s}
+.course:hover{transform:translateX(4px);border-color:var(--ink)}
+.meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--mut);font-size:14px}
+.tag{background:var(--hl);color:#1b1c1f;padding:1px 8px;font-weight:600}
+.course h2{font:800 22px/1.15 Archivo,Inter,sans-serif;margin:6px 0 4px}
+.course p{margin:0;max-width:70ch}
+.objs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.objs span{background:#333;color:#f5c96a;font:13px "JetBrains Mono",monospace;padding:2px 8px;border-radius:3px}
+.empty{color:var(--mut)}
+footer{color:var(--mut);font-size:14px;border-top:1px solid var(--line)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="band">
+ <div class="wrap">
+  <div class="crumb"><a href="../index.html">EMC Studio</a> › Interfaces</div>
+  <h1>Interfaces</h1>
+  <p class="lead">Supports de cours</p>
+ </div>
+</header>
+<main class="band" style="padding-top:0">
+ <div class="wrap">
+  <ul class="list" id="list"></ul>
+ </div>
+</main>
+<footer class="band"><div class="wrap"><a href="../index.html">← Retour à EMC Studio</a> · Electronic &amp; Multimedia Composition · <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.fr">CC0 1.0</a> (domaine public)</div></footer>
+<script>
+{
+/* Ajouter un cours = ajouter une ligne en haut de cette liste */
+const courses=[
+];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=d=>new Date(d+'T12:00:00').toLocaleDateString('fr-CH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const list=document.getElementById('list');
+const render=l=>{const items=courses.filter(c=>l==='all'||c.level===l).sort((a,b)=>b.date.localeCompare(a.date));
+ list.innerHTML=items.map(c=>`<li><a class="course" href="${esc(c.href)}"><div class="meta"><span>${esc(fmt(c.date))}</span><span class="tag">${esc(c.level)}</span></div><h2>${esc(c.title)}</h2><p>${esc(c.desc)}</p><div class="objs">${c.objs.map(o=>`<span>${esc(o)}</span>`).join('')}</div></a></li>`).join('');};
+render('all');
+}
+</script>
+</body>
+</html>
