@@ -17,7 +17,9 @@ if(svg&&D.patch){
  P.lines.forEach(l=>{const [s,so]=l.patchline.source,[d,di]=l.patchline.destination;const a=B[s],b=B[d];if(!a||!b)return;
   const [ax,ay,aw,ah]=a.patching_rect,[bx,by,bw]=b.patching_rect;
   const x1=ax+port(so,a.numoutlets,aw),y1=ay+ah,x2=bx+port(di,b.numinlets,bw),y2=by,k=Math.max(12,Math.abs(y2-y1)*.4);
-  const p=`M${x1} ${y1} C${x1} ${y1+k} ${x2} ${y2-k} ${x2} ${y2}`;
+  const mp=l.patchline.midpoints;let p;
+  if(mp&&mp.length){p=`M${x1} ${y1}`;for(let i=0;i<mp.length;i+=2)p+=` L${mp[i]} ${mp[i+1]}`;p+=` L${x2} ${y2}`}
+  else p=`M${x1} ${y1} C${x1} ${y1+k} ${x2} ${y2-k} ${x2} ${y2}`;
   const sig=(a.outlettype||[])[so]==='signal';
   h+=`<g class="cord" data-a="${s}" data-b="${d}"><path d="${p}" fill="none" stroke="var(--${sig?'acc':'mut'})" stroke-width="${sig?1.6:1}"${sig?'':' stroke-dasharray="3 3"'}/></g>`});
  const T=(x,y,s,fill,w)=>`<text x="${x}" y="${y}" font-size="11.5" font-family="Manrope,sans-serif" fill="${fill}"${w?` font-weight="${w}"`:''}>${s}</text>`;
@@ -25,6 +27,11 @@ if(svg&&D.patch){
   if(c==='comment'){g=T(x+3,y+14,esc(b.text),b.bgcolor?'var(--acct)':'var(--mut)',b.bgcolor?600:400)}
   else if(c==='toggle'){g=`<rect class="body" x="${x}" y="${y}" width="${w}" height="${hh}" fill="var(--bg)" stroke="var(--ink)"/><path d="M${x+6} ${y+6}L${x+w-6} ${y+hh-6}M${x+w-6} ${y+6}L${x+6} ${y+hh-6}" stroke="var(--mut)"/>`}
   else if(c==='ezdac~'){g=`<rect class="body" x="${x}" y="${y}" width="${w}" height="${hh}" fill="var(--bg)" stroke="var(--ink)"/><path d="M${x+12} ${y+18}h6l8-7v24l-8-7h-6z" fill="var(--ink)"/><path d="M${x+30} ${y+16}q5 7 0 14M${x+34} ${y+12}q9 11 0 22" stroke="var(--ink)" fill="none"/>`}
+  else if(c==='ezadc~'){g=`<rect class="body" x="${x}" y="${y}" width="${w}" height="${hh}" fill="var(--bg)" stroke="var(--ink)"/><rect x="${x+w/2-5}" y="${y+9}" width="10" height="17" rx="5" fill="var(--ink)"/><path d="M${x+w/2-9} ${y+20}q0 10 9 10q9 0 9-10M${x+w/2} ${y+30}v6" stroke="var(--ink)" fill="none" stroke-width="1.5"/>`}
+  else if(c==='live.gain~'){const nm=((b.saved_attribute_attributes||{}).valueof||{}).parameter_shortname||'live.gain~';g=`<rect class="body" x="${x}" y="${y}" width="${w}" height="${hh}" fill="var(--bg)" stroke="var(--ink)"/>`+T(x+w/2-nm.length*3,y+13,esc(nm),'var(--ink)')+`<rect x="${x+6}" y="${y+20}" width="${w-12}" height="7" fill="none" stroke="var(--mut)"/><rect x="${x+6}" y="${y+20}" width="${(w-12)*.55}" height="7" fill="var(--acc)" opacity=".7"/><path d="M${x+6+(w-12)*.82} ${y+29}l-4 7h8z" fill="var(--ink)"/>`}
+  else if(c==='attrui'){g=`<rect class="body" x="${x}" y="${y}" width="${w}" height="${hh}" fill="var(--msg)" stroke="var(--line)"/>`+T(x+6,y+15,esc(b.attr||'attrui'),'var(--ink)')+`<line x1="${x+w/2}" y1="${y+3}" x2="${x+w/2}" y2="${y+hh-3}" stroke="var(--line)"/>`}
+  else if(c==='umenu'){const it=(b.items||[]).join(' ').split(' , ');g=`<rect class="body" x="${x}" y="${y}" width="${w}" height="${hh}" fill="var(--msg)" stroke="var(--ink)" rx="3"/>`+T(x+6,y+15,esc(it[it.length-1]||'umenu'),'var(--ink)')+`<path d="M${x+w-14} ${y+9}l4 5 4-5z" fill="var(--ink)"/>`}
+  else if(c==='filtergraph~'){const yy=y+hh*.45;g=`<rect class="body" x="${x}" y="${y}" width="${w}" height="${hh}" fill="var(--bg)" stroke="var(--ink)"/><line x1="${x}" y1="${yy}" x2="${x+w}" y2="${yy}" stroke="var(--line)"/><path d="M${x+8} ${y+hh-4} C${x+w*.2} ${yy+4} ${x+w*.28} ${yy} ${x+w*.4} ${yy} L${x+w-4} ${yy}" fill="none" stroke="var(--acc)" stroke-width="1.6"/>`+T(x+6,y+14,'filtergraph~','var(--mut)')}
   else if(c==='flonum'||c==='number'){g=`<rect class="body" x="${x}" y="${y}" width="${w}" height="${hh}" fill="var(--bg)" stroke="var(--ink)"/><path d="M${x+4} ${y+6}l6 5-6 5z" fill="var(--ink)"/>`+T(x+14,y+15,c==='flonum'?'0.':'0','var(--ink)')}
   else{const msg=c==='message';const parts=esc(b.text||c).split(' ');const head=parts.shift();
    const rest=parts.map(p=>p.startsWith('@')?`<tspan fill="var(--acct)">${p}</tspan>`:p).join(' ');

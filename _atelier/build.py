@@ -217,7 +217,7 @@ def build_session(course, sname, S, m, allm, depth=2):
     tokmap = {}; demo_done = False
     for h, b in S['sections']:
         hl = h.lower()
-        if hl.startswith('le parcours'): inner = sec_steps(b)
+        if hl.startswith('le parcours') or hl.startswith('le patch'): inner = sec_steps(b)
         elif hl.startswith('avant de commencer'): inner = sec_notes(b)
         elif '![' in b: inner = sec_figure(b, folder)
         elif hl.startswith('les objets'): inner, tokmap, m['gl'] = sec_objects(b)
@@ -313,10 +313,13 @@ site = json.loads((SRC / 'site.json').read_text())
 if OUT.exists(): shutil.rmtree(OUT)
 OUT.mkdir(parents=True); shutil.copytree(ASSETS, OUT / 'assets')
 (OUT / '.nojekyll').write_text('')
-parsed = [(c, s, parse_session(SRC / c['slug'] / s)) for c in site['courses'] for s in c['seances']]
+parsed = [(c, s, parse_session(SRC / c['slug'] / s)) for c in site['courses'] for s in c['seances'] if '/' not in s]
 allsess = [meta(c, s, S) for c, s, S in parsed]
 for (c, s, S), m in zip(parsed, allsess): build_session(c, s, S, m, allsess)
-for c in site['courses']: build_course(c, [m for m in allsess if m['course'] is c])
+for c in site['courses']:
+    own = [m for m in allsess if m['course'] is c]
+    shared = [dict(m, href=f"../{m['key']}/") for k in c['seances'] if '/' in k for m in allsess if m['key'] == k]
+    build_course(c, own + shared)
 build_index(allsess)
 build_home(site['courses'], max(allsess, key=lambda s: s['date']) if allsess else None, allsess)
 print('built', len(allsess), 'session(s)')

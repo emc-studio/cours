@@ -27,7 +27,7 @@ inutile de les décrire ici.
 On fabrique également ici un son rythmé (sinus + bruit rose, découpé par une enveloppe), envoyé au Spat 5 qui le place dans l'espace autour de l'auditeur, sur quatre haut-parleurs.
 
 
-## Le parcours, étape par étape
+## Le patch, étape par étape
 
 ### 1. La matière sonore
 `cycle~ 400` produit un sinus à 400 Hz. `pink~` produit un bruit rose, qu'on atténue fortement avec `*~ 0.1` (environ −20 dB). `+~` additionne les deux : c'est un mélangeur.

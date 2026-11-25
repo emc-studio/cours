@@ -1,8 +1,33 @@
 {
  "courses": [
-  {"slug":"e-music-ma","title":"Musique électronique","level":"MA","seances":["2026-11-24-simple-spat-02"]},
-  {"slug":"e-music-ba","title":"Musique électronique","level":"BA","seances":[]},
-  {"slug":"interfaces","title":"Interfaces","level":"MA","seances":[]},
-  {"slug":"concepts-et-creation","title":"Concepts & création","level":"MA · BA","seances":[]}
+  {
+   "slug": "e-music-ma",
+   "title": "Musique électronique",
+   "level": "MA",
+   "seances": [
+    "2026-11-10-i-am-sitting-in-a-room",
+    "2026-11-24-simple-spat-02"
+   ]
+  },
+  {
+   "slug": "e-music-ba",
+   "title": "Musique électronique",
+   "level": "BA",
+   "seances": [
+    "e-music-ma/2026-11-10-i-am-sitting-in-a-room"
+   ]
+  },
+  {
+   "slug": "interfaces",
+   "title": "Interfaces",
+   "level": "MA",
+   "seances": []
+  },
+  {
+   "slug": "concepts-et-creation",
+   "title": "Concepts & création",
+   "level": "MA · BA",
+   "seances": []
+  }
  ]
 }
