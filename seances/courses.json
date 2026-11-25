@@ -1,0 +1,8 @@
+{
+ "courses": [
+  {"slug": "e-music-ma", "title": "Musique électronique", "level": "MA"},
+  {"slug": "e-music-ba", "title": "Musique électronique", "level": "BA"},
+  {"slug": "interfaces", "title": "Interfaces", "level": "MA"},
+  {"slug": "concepts-et-creation", "title": "Concepts & création", "level": "MA · BA"}
+ ]
+}

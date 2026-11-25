@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Render every session page of the built site to a PDF next to it: python3 pdf.py out/v2"""
+"""Render every session page of the built site to a PDF next to it: python3 _atelier/pdf.py _site"""
 import sys, http.server, threading, functools
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 root = Path(sys.argv[1]).resolve()
-H = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
-H.log_message = lambda *a: None
+class Quiet(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *a): pass
+H = functools.partial(Quiet, directory=str(root))
 srv = http.server.ThreadingHTTPServer(('127.0.0.1', 8765), H); threading.Thread(target=srv.serve_forever, daemon=True).start()
 with sync_playwright() as p:
     pg = p.chromium.launch().new_page(viewport={'width': 1100, 'height': 900})

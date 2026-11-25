@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""EMC Studio site generator: src/ (site.json + one folder per session with .md, .maxpat, config.json) -> out/"""
+"""EMC Studio site generator.
+python3 _atelier/build.py seances _site _atelier/assets
+seances/courses.json lists the courses; every folder seances/<course>/<AAAA-MM-JJ-slug>/
+holding a .md (+ .maxpat, config.json, images) is a session. Folders starting with _ or . are ignored.
+A session shared with another course: `aussi: e-music-ba` (or a list) in the .md header."""
 import json, re, math, html, shutil, sys, hashlib
 from pathlib import Path
 import markdown, yaml
@@ -309,17 +313,50 @@ def build_index(allm):
             f'<section class="s" id="objets"><h2>Objets</h2><p class="label">Chaque objet renvoie à sa fiche, ou aux patchs qui l\'utilisent.</p><div class="jump">{jo}</div><div class="idx">{ocards}</div></section>')
     (out / 'index.html').write_text(shell('Notions & objets · EMC Studio', 1, '<a href="../index.html">EMC Studio</a>', body))
 
-site = json.loads((SRC / 'site.json').read_text())
+def fail(folder, msg):
+    sys.exit(f'\nERREUR dans {folder} :\n  {msg}\n')
+
+def discover(courses):
+    """Every course subfolder holding a .md is a session; check what the page needs."""
+    slugs = {c['slug'] for c in courses}
+    for d in sorted(p for p in SRC.iterdir() if p.is_dir() and p.name[0] not in '._'):
+        if d.name not in slugs: fail(d, f'dossier de cours inconnu « {d.name} » (cours possibles : {", ".join(sorted(slugs))} ; voir courses.json)')
+    found = []
+    for c in courses:
+        cdir = SRC / c['slug']
+        if not cdir.is_dir(): continue
+        for folder in sorted(p for p in cdir.iterdir() if p.is_dir() and p.name[0] not in '._'):
+            mds = list(folder.glob('*.md'))
+            if not mds: print(f'(ignoré : {folder.relative_to(SRC)} ne contient pas de .md)'); continue
+            if len(mds) > 1: fail(folder, f'un seul fichier .md par séance (trouvés : {", ".join(m.name for m in mds)})')
+            if not re.match(r'\d{4}-\d{2}-\d{2}-[a-z0-9-]+$', folder.name):
+                fail(folder, 'le nom du dossier doit être de la forme AAAA-MM-JJ-mots-en-minuscules (ex. 2026-12-01-granular-01)')
+            try: S = parse_session(folder)
+            except yaml.YAMLError as e: fail(mds[0], f'en-tête illisible (entre les deux lignes ---) : {e}')
+            except json.JSONDecodeError as e: fail(folder / 'config.json', f'JSON invalide : {e}')
+            except AttributeError: fail(mds[0], 'il manque le titre de la page (une ligne « # Titre » avant la première section ##)')
+            if 'date' not in S['fm']: fail(mds[0], 'il manque « date: AAAA-MM-JJ » dans l\'en-tête')
+            p = S['cfg'].get('patch')
+            if p and not (folder / p).exists(): fail(folder / 'config.json', f'le patch « {p} » n\'est pas dans le dossier')
+            aussi = S['fm'].get('aussi') or []
+            aussi = [aussi] if isinstance(aussi, str) else aussi
+            for a in aussi:
+                if a not in slugs: fail(mds[0], f'« aussi: {a} » : cours inconnu (cours possibles : {", ".join(sorted(slugs))})')
+            found.append((c, folder.name, S, aussi))
+    return found
+
+courses = json.loads((SRC / 'courses.json').read_text())['courses']
+found = discover(courses)
 if OUT.exists(): shutil.rmtree(OUT)
 OUT.mkdir(parents=True); shutil.copytree(ASSETS, OUT / 'assets')
 (OUT / '.nojekyll').write_text('')
-parsed = [(c, s, parse_session(SRC / c['slug'] / s)) for c in site['courses'] for s in c['seances'] if '/' not in s]
+parsed = [(c, s, S) for c, s, S, _ in found]
 allsess = [meta(c, s, S) for c, s, S in parsed]
 for (c, s, S), m in zip(parsed, allsess): build_session(c, s, S, m, allsess)
-for c in site['courses']:
+for c in courses:
     own = [m for m in allsess if m['course'] is c]
-    shared = [dict(m, href=f"../{m['key']}/") for k in c['seances'] if '/' in k for m in allsess if m['key'] == k]
+    shared = [dict(m, href=f"../{m['key']}/") for (_, _, _, aussi), m in zip(found, allsess) if c['slug'] in aussi]
     build_course(c, own + shared)
 build_index(allsess)
-build_home(site['courses'], max(allsess, key=lambda s: s['date']) if allsess else None, allsess)
+build_home(courses,max(allsess, key=lambda s: s['date']) if allsess else None, allsess)
 print('built', len(allsess), 'session(s)')

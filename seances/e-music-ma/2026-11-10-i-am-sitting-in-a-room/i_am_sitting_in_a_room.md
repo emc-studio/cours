@@ -3,6 +3,7 @@ titre: "I am sitting in a room : une boucle de retard qui révèle les résonanc
 date: 2026-11-10
 cours: Musique électronique MA · BA
 niveau: master · bachelor
+aussi: e-music-ba
 patch: 26-11-10_I_am_sitting_in_a_room_v01.maxpat
 notions: Boucle de rétroaction, Ligne de retard, Réverbération, Filtre passe-haut, Entrée micro, Lecture de fichier son, Routage audio, Alvin Lucier
 ---
