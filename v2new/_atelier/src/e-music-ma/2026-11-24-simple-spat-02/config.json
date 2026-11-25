@@ -1,8 +1,0 @@
-{
- "patch": "simple_spat_02.maxpat",
- "image": {"Fenêtre Spat Oper": "spat_oper.png"},
- "zones": {"1":["obj-10","obj-31","obj-45","obj-32"],"2":["obj-18","obj-16","obj-21","obj-14","obj-24"],"3":["obj-22"],"4":["obj-36","obj-34","obj-41","obj-42","obj-39","obj-38","obj-43","obj-44"],"5":["obj-26"],"6":["obj-1","obj-23","obj-46","obj-6","obj-30"]},
- "pins": {"1":[30,37],"2":[212,37],"3":[72,179],"4":[428,130],"5":[194,299],"6":[72,355]},
- "viewBox": "0 6 720 428",
- "demos": ["spat","adsr"]
-}
