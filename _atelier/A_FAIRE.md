@@ -8,7 +8,7 @@ Réglage Pages passé sur « GitHub Actions », premier déploiement vérifié, 
 
 ## Réorganisation du 26.11.2026
 
-Séances directement dans `seances/` (rangement libre, sous-dossiers possibles), cours choisis dans l'en-tête du `.md` (`cours: e-music-ma, e-music-ba`), adresse de page indépendante du rangement : `<site>/<AAAA-MM-JJ-slug>/`. Prochaine étape : renommer le dépôt en `cours` (adresse du site : https://emc-studio.github.io/cours/), puis republier les liens sur Discord.
+Séances directement dans `seances/` (rangement libre, sous-dossiers possibles), cours choisis dans l'en-tête du `.md` (`cours: e-music-ma, e-music-ba`), adresse de page indépendante du rangement : `<site>/<AAAA-MM-JJ-slug>/`. Dépôt renommé `emc-studio/cours` le 26.11.2026 : site à https://emc-studio.github.io/cours/ (liens à republier sur Discord).
 
 ## Idées en attente
 

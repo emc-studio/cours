@@ -1,6 +1,6 @@
 # EMC Studio
 
-Supports de cours (Electronic & Multimedia Composition) : https://emc-studio.github.io/e-music-ma/
+Supports de cours (Electronic & Multimedia Composition) : https://emc-studio.github.io/cours/
 
 - `seances/` : une séance par dossier (mode d'emploi dans `seances/LISEZMOI.md`)
 - `_atelier/` : le générateur du site
