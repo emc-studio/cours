@@ -1,8 +1,7 @@
 ---
 titre: "Simple spat : mise en espace d'une source sonore avec quatre haut-parleurs"
 date: 2026-11-24
-cours: Musique électronique MA
-niveau: master
+cours: e-music-ma
 patch: simple_spat_02.maxpat
 notions: Synthèse simple, Enveloppe ADSR, VCA, Messages OSC, Spatialisation quadriphonique, Spat 5 (IRCAM)
 ---

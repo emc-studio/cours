@@ -12,6 +12,6 @@ python3 _atelier/build.py seances _site _atelier/assets
 python3 _atelier/pdf.py _site
 ```
 
-`build.py` découvre les séances en lisant les sous-dossiers de `seances/<cours>/` et s'arrête avec un message en français si un dossier est mal formé (nom, en-tête, config.json, patch manquant, cours inconnu dans `aussi:`).
+`build.py` trouve les séances partout sous `seances/` (tout dossier contenant un `.md`), lit leurs cours dans l'en-tête (`cours: e-music-ma, e-music-ba`) et publie chaque page à `<site>/<AAAA-MM-JJ-slug>/`. Il s'arrête avec un message en français si un dossier est mal formé (nom, nom en double, en-tête, config.json, patch manquant, cours inconnu).
 
 Suite : voir `A_FAIRE.md`.

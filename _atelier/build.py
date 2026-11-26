@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """EMC Studio site generator.
 python3 _atelier/build.py seances _site _atelier/assets
-seances/courses.json lists the courses; every folder seances/<course>/<AAAA-MM-JJ-slug>/
-holding a .md (+ .maxpat, config.json, images) is a session. Folders starting with _ or . are ignored.
-A session shared with another course: `aussi: e-music-ba` (or a list) in the .md header."""
+seances/courses.json lists the courses. Every folder holding a .md anywhere under seances/
+(directly, or in sub-folders by theme) is a session, named AAAA-MM-JJ-slug, unique across the tree.
+Its courses come from the .md header: `cours: e-music-ma, e-music-ba` (first = main course).
+Page address: <site>/<AAAA-MM-JJ-slug>/, whatever the folder layout. Folders starting with _ or . are ignored."""
 import json, re, math, html, shutil, sys, hashlib
 from pathlib import Path
 import markdown, yaml
@@ -15,6 +16,19 @@ MONTHS = ['janvier','février','mars','avril','mai','juin','juillet','août','se
 esc = lambda s: html.escape(str(s), quote=True)
 md = lambda s: markdown.markdown(re.sub(r'([^\n])\n(- |\d+\. )', r'\1\n\n\2', s), extensions=['fenced_code'])
 mdi = lambda s: re.sub(r'^<p>|</p>$', '', md(s).strip())
+
+LEVELS = {'MA': 'master', 'BA': 'bachelor'}
+def clabel(cs):
+    """Musique électronique MA · BA  /  Interfaces MA · Musique électronique BA"""
+    if len({c['title'] for c in cs}) == 1: return f"{cs[0]['title']} {' · '.join(c['level'] for c in cs)}".strip()
+    return ' · '.join(f"{c['title']} {c['level']}".strip() for c in cs)
+def nlabel(cs):
+    out = []
+    for c in cs:
+        for l in c['level'].split(' · '):
+            l = LEVELS.get(l.strip(), l.strip())
+            if l and l not in out: out.append(l)
+    return ' · '.join(out)
 
 def dshort(d): return f'{d.day:02d}.{d.month:02d}.{d.year}'
 
@@ -167,7 +181,8 @@ def sec_further(body):
 # ---------- session page ----------
 SESSION_JS = Path(__file__).with_name('session.js').read_text()
 
-def meta(course, sname, S):
+def meta(cs, sname, S):
+    course = cs[0]
     fm, cfg = S['fm'], S['cfg']
     tags = [n.strip() for n in str(fm.get('notions', '')).split(',') if n.strip()]
     objs = []
@@ -176,13 +191,13 @@ def meta(course, sname, S):
             bx = o['box']; c = bx['maxclass']
             t = str(bx.get('text', '')).split(' ')[0] if c == 'newobj' else (None if c in ('comment', 'message') else c)
             if t and t not in objs: objs.append(t)
-    asl = lambda v: [v] if isinstance(v, str) else (v or [])
-    return dict(date=fm['date'], title=S['title'], href=f'{sname}/', key=f"{course['slug']}/{sname}", course=course,
+    asl = lambda v: [k.strip().split('/')[-1] for k in (v.split(',') if isinstance(v, str) else (v or []))]
+    return dict(date=fm['date'], title=S['title'], key=sname, course=course, courses=cs, label=clabel(cs),
                 tags=tags, objs=sorted(objs), avant=asl(fm.get('avant')), apres=asl(fm.get('apres')), gl=[])
 
 def links_html(m, allm):
     by = {x['key']: x for x in allm}
-    row = lambda x: f'<a class="row" href="../../{x["key"]}/"><span class="d">{dshort(x["date"])}</span><span class="t">{esc(x["title"])}</span><span class="c">{esc(x["course"]["title"])} {esc(x["course"]["level"])} →</span></a>'
+    row = lambda x: f'<a class="row" href="../{x["key"]}/"><span class="d">{dshort(x["date"])}</span><span class="t">{esc(x["title"])}</span><span class="c">{esc(x["label"])} →</span></a>'
     out = ''
     for lab, keys in (('Avant cette séance', m['avant']), ('Pour la suite', m['apres'])):
         xs = [by[k] for k in keys if k in by]
@@ -193,16 +208,15 @@ def links_html(m, allm):
     if rel: out += f'<span>Sur des notions proches</span><div>{"".join(row(x) for x in rel)}</div>'
     return f'<section class="s" id="liens"><h2>Dans la bibliothèque</h2><div class="links">{out}</div></section>' if out else ''
 
-def build_session(course, sname, S, m, allm, depth=2):
-    fm, cfg, folder = S['fm'], S['cfg'], S['folder']
-    d = fm['date']; out = OUT / course['slug'] / sname; out.mkdir(parents=True, exist_ok=True)
+def build_session(sname, S, m, allm, depth=1):
+    fm, cfg, folder = S['fm'], S['cfg'], S['folder']; course = m['course']
+    d = fm['date']; out = OUT / sname; out.mkdir(parents=True, exist_ok=True)
     for f in folder.iterdir():
         if f.suffix in ('.png', '.jpg', '.jpeg', '.svg', '.maxpat', '.gif', '.webp'): shutil.copy(f, out / f.name)
-    ctitle = f"{course['title']} {course['level'].split(' ')[0]}" if course['level'] else course['title']
-    crumb = f'<a href="../../index.html">EMC Studio</a><span>›</span><a href="../index.html">{esc(course["title"])} {esc(course["level"])}</a><span>›</span><span>{dshort(d)}</span>'
+    crumb = f'<a href="../index.html">EMC Studio</a><span>›</span><a href="../{course["slug"]}/index.html">{esc(course["title"])} {esc(course["level"])}</a><span>›</span><span>{dshort(d)}</span>'
     tags = m['tags']
     from urllib.parse import quote
-    notions = ''.join(f'<a href="../../index.html?q={quote(n)}#recherche" title="Tous les cours avec « {esc(n)} »">{esc(n)}</a>' for n in tags)
+    notions = ''.join(f'<a href="../index.html?q={quote(n)}#recherche" title="Tous les cours avec « {esc(n)} »">{esc(n)}</a>' for n in tags)
     patchf = cfg.get('patch')
     actions = ''
     if patchf:
@@ -212,7 +226,7 @@ def build_session(course, sname, S, m, allm, depth=2):
                    f'<span class="small">Après « Copier le patch » : dans Max, <b>File › New From Clipboard</b></span></div>')
     due = any(h.lower().startswith('aller plus loin') and '**À rendre' in bd for h, bd in S['sections'])
     if due: actions = f'<a class="due-link" href="#{slug("Aller plus loin")}">Exercices à rendre <span aria-hidden="true">↓</span></a>' + actions
-    body = (f'<div class="shead"><div class="meta"><span>{dshort(d)}</span><span class="lvl">{esc(fm.get("niveau",""))}</span><span>{esc(fm.get("cours",""))}</span></div>'
+    body = (f'<div class="shead"><div class="meta"><span>{dshort(d)}</span><span class="lvl">{esc(nlabel(m["courses"]))}</span><span>{esc(m["label"])}</span></div>'
             f'<h1>{esc(S["title"])}</h1><div class="lead">{md(S["lead"])}</div>'
             f'<div class="notions">{notions}</div>{actions}</div>')
     if patchf:
@@ -266,7 +280,7 @@ def demos_html(which):
 # ---------- course + home ----------
 def build_course(course, sessions):
     out = OUT / course['slug']; out.mkdir(parents=True, exist_ok=True)
-    rows = ''.join(f'<a class="row" href="{esc(s["href"])}"><span class="d">{dshort(s["date"])}</span><span class="t">{esc(s["title"])}</span><span class="c">→</span></a>'
+    rows = ''.join(f'<a class="row" href="../{esc(s["key"])}/"><span class="d">{dshort(s["date"])}</span><span class="t">{esc(s["title"])}</span><span class="c">→</span></a>'
                    for s in sorted(sessions, key=lambda s: s['date'], reverse=True))
     crumb = f'<a href="../index.html">EMC Studio</a><span>›</span><span>{esc(course["title"])} {esc(course["level"])}</span>'
     body = (f'<div class="ctitle"><span class="lvl">{esc(course["level"])}</span><h1>{esc(course["title"])}</h1></div>'
@@ -280,9 +294,9 @@ def build_home(courses, latest, allsess):
     lat = ''
     if latest:
         s = latest
-        lat = (f'<section class="latest"><p class="label">Dernière séance</p><a class="row" href="{s["course"]["slug"]}/{s["href"]}">'
-               f'<span class="d">{dshort(s["date"])}</span><span class="t">{esc(s["title"])}</span><span class="c">{esc(s["course"]["title"])} {esc(s["course"]["level"])} →</span></a></section>')
-    idx = [dict(d=dshort(s['date']), iso=str(s['date']), t=s['title'], c=f"{s['course']['title']} {s['course']['level']}", h=f"{s['course']['slug']}/{s['href']}", tags=s['tags'], objs=s['objs']) for s in sorted(allsess, key=lambda s: s['date'], reverse=True)]
+        lat = (f'<section class="latest"><p class="label">Dernière séance</p><a class="row" href="{s["key"]}/">'
+               f'<span class="d">{dshort(s["date"])}</span><span class="t">{esc(s["title"])}</span><span class="c">{esc(s["label"])} →</span></a></section>')
+    idx = [dict(d=dshort(s['date']), iso=str(s['date']), t=s['title'], c=s['label'], h=f"{s['key']}/", tags=s['tags'], objs=s['objs']) for s in sorted(allsess, key=lambda s: s['date'], reverse=True)]
     srch = ('<section class="search" id="recherche"><p class="label">Rechercher une notion, un objet, un patch</p>'
             '<input id="q" type="search" placeholder="OSC, adsr~, spatialisation…" aria-label="Rechercher">'
             '<div class="tags" id="tags"></div><div class="hits" id="hits"></div></section>'
@@ -295,7 +309,7 @@ def build_home(courses, latest, allsess):
 def build_index(allm):
     out = OUT / 'notions'; out.mkdir(parents=True, exist_ok=True)
     srt = lambda xs: sorted(xs, key=lambda s: s.lower())
-    row = lambda x, frag='': f'<li><a href="../{x["key"]}/{frag}">{dshort(x["date"])} · {esc(x["title"].split(":")[0].strip())}</a> <span>({esc(x["course"]["title"])} {esc(x["course"]["level"])})</span></li>'
+    row = lambda x, frag='': f'<li><a href="../{x["key"]}/{frag}">{dshort(x["date"])} · {esc(x["title"].split(":")[0].strip())}</a> <span>({esc(x["label"])})</span></li>'
     tags = srt({t for x in allm for t in x['tags']})
     ncards = ''.join(f'<div id="n-{slug(t)}"><h3>{esc(t)}</h3><ul>{"".join(row(x) for x in allm if t in x["tags"])}</ul></div>' for t in tags)
     objs = srt({o for x in allm for o in x['objs']} | {t for x in allm for g in x['gl'] for t in g['toks']})
@@ -316,33 +330,34 @@ def build_index(allm):
 def fail(folder, msg):
     sys.exit(f'\nERREUR dans {folder} :\n  {msg}\n')
 
+def as_list(v):
+    return [x.strip() for x in (v.split(',') if isinstance(v, str) else (v or [])) if str(x).strip()]
+
 def discover(courses):
-    """Every course subfolder holding a .md is a session; check what the page needs."""
-    slugs = {c['slug'] for c in courses}
-    for d in sorted(p for p in SRC.iterdir() if p.is_dir() and p.name[0] not in '._'):
-        if d.name not in slugs: fail(d, f'dossier de cours inconnu « {d.name} » (cours possibles : {", ".join(sorted(slugs))} ; voir courses.json)')
-    found = []
-    for c in courses:
-        cdir = SRC / c['slug']
-        if not cdir.is_dir(): continue
-        for folder in sorted(p for p in cdir.iterdir() if p.is_dir() and p.name[0] not in '._'):
-            mds = list(folder.glob('*.md'))
-            if not mds: print(f'(ignoré : {folder.relative_to(SRC)} ne contient pas de .md)'); continue
-            if len(mds) > 1: fail(folder, f'un seul fichier .md par séance (trouvés : {", ".join(m.name for m in mds)})')
-            if not re.match(r'\d{4}-\d{2}-\d{2}-[a-z0-9-]+$', folder.name):
-                fail(folder, 'le nom du dossier doit être de la forme AAAA-MM-JJ-mots-en-minuscules (ex. 2026-12-01-granular-01)')
-            try: S = parse_session(folder)
-            except yaml.YAMLError as e: fail(mds[0], f'en-tête illisible (entre les deux lignes ---) : {e}')
-            except json.JSONDecodeError as e: fail(folder / 'config.json', f'JSON invalide : {e}')
-            except AttributeError: fail(mds[0], 'il manque le titre de la page (une ligne « # Titre » avant la première section ##)')
-            if 'date' not in S['fm']: fail(mds[0], 'il manque « date: AAAA-MM-JJ » dans l\'en-tête')
-            p = S['cfg'].get('patch')
-            if p and not (folder / p).exists(): fail(folder / 'config.json', f'le patch « {p} » n\'est pas dans le dossier')
-            aussi = S['fm'].get('aussi') or []
-            aussi = [aussi] if isinstance(aussi, str) else aussi
-            for a in aussi:
-                if a not in slugs: fail(mds[0], f'« aussi: {a} » : cours inconnu (cours possibles : {", ".join(sorted(slugs))})')
-            found.append((c, folder.name, S, aussi))
+    """Every folder holding a .md under seances/ (any depth) is a session; check what the page needs."""
+    bys = {c['slug']: c for c in courses}
+    skip = lambda p: any(part[0] in '._' for part in p.relative_to(SRC).parts)
+    found, seen = [], {}
+    for folder in sorted({f.parent for f in SRC.rglob('*.md')} - {SRC}):
+        if skip(folder): continue
+        mds = sorted(folder.glob('*.md'))
+        if len(mds) > 1: fail(folder, f'un seul fichier .md par séance (trouvés : {", ".join(m.name for m in mds)})')
+        if not re.match(r'\d{4}-\d{2}-\d{2}-[a-z0-9-]+$', folder.name):
+            fail(folder, 'le nom du dossier d\'une séance doit être de la forme AAAA-MM-JJ-mots-en-minuscules (ex. 2026-12-01-granular-01)')
+        if folder.name in seen: fail(folder, f'une autre séance porte déjà ce nom : {seen[folder.name]}')
+        seen[folder.name] = folder
+        try: S = parse_session(folder)
+        except yaml.YAMLError as e: fail(mds[0], f'en-tête illisible (entre les deux lignes ---) : {e}')
+        except json.JSONDecodeError as e: fail(folder / 'config.json', f'JSON invalide : {e}')
+        except AttributeError: fail(mds[0], 'il manque le titre de la page (une ligne « # Titre » avant la première section ##)')
+        if 'date' not in S['fm']: fail(mds[0], 'il manque « date: AAAA-MM-JJ » dans l\'en-tête')
+        p = S['cfg'].get('patch')
+        if p and not (folder / p).exists(): fail(folder / 'config.json', f'le patch « {p} » n\'est pas dans le dossier')
+        cs = as_list(S['fm'].get('cours'))
+        if not cs: fail(mds[0], f'il manque la ligne « cours: … » dans l\'en-tête (cours possibles : {", ".join(bys)})')
+        for c in cs:
+            if c not in bys: fail(mds[0], f'« cours: {c} » : cours inconnu (cours possibles : {", ".join(bys)} ; voir courses.json)')
+        found.append(([bys[c] for c in cs], folder.name, S))
     return found
 
 courses = json.loads((SRC / 'courses.json').read_text())['courses']
@@ -350,13 +365,9 @@ found = discover(courses)
 if OUT.exists(): shutil.rmtree(OUT)
 OUT.mkdir(parents=True); shutil.copytree(ASSETS, OUT / 'assets')
 (OUT / '.nojekyll').write_text('')
-parsed = [(c, s, S) for c, s, S, _ in found]
-allsess = [meta(c, s, S) for c, s, S in parsed]
-for (c, s, S), m in zip(parsed, allsess): build_session(c, s, S, m, allsess)
-for c in courses:
-    own = [m for m in allsess if m['course'] is c]
-    shared = [dict(m, href=f"../{m['key']}/") for (_, _, _, aussi), m in zip(found, allsess) if c['slug'] in aussi]
-    build_course(c, own + shared)
+allsess = [meta(cs, s, S) for cs, s, S in found]
+for (cs, s, S), m in zip(found, allsess): build_session(s, S, m, allsess)
+for c in courses: build_course(c, [m for m in allsess if c in m['courses']])
 build_index(allsess)
 build_home(courses,max(allsess, key=lambda s: s['date']) if allsess else None, allsess)
 print('built', len(allsess), 'session(s)')

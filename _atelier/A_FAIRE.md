@@ -6,10 +6,14 @@ Fait : sources dans `seances/<cours>/<AAAA-MM-JJ-slug>/`, `seances/courses.json`
 
 Réglage Pages passé sur « GitHub Actions », premier déploiement vérifié, anciennes pages générées supprimées de la racine (25.11.2026). Claude a l'accès en écriture au dépôt.
 
+## Réorganisation du 26.11.2026
+
+Séances directement dans `seances/` (rangement libre, sous-dossiers possibles), cours choisis dans l'en-tête du `.md` (`cours: e-music-ma, e-music-ba`), adresse de page indépendante du rangement : `<site>/<AAAA-MM-JJ-slug>/`. Prochaine étape : renommer le dépôt en `cours` (adresse du site : https://emc-studio.github.io/cours/), puis republier les liens sur Discord.
+
 ## Idées en attente
 
-Extrait audio par patch. Renommer éventuellement le dépôt en `emc-studio.github.io` pour une adresse courte.
+Extrait audio par patch.
 
 ## État
 
-Deux séances : e-music-ma/2026-11-10-i-am-sitting-in-a-room (aussi e-music-ba) ; e-music-ma/2026-11-24-simple-spat-02. Documents sources : « Simple spat 02 · texte de la page » et « I am sitting in a room · texte de la page » (Claude Docs).
+Deux séances : 2026-11-10-i-am-sitting-in-a-room (e-music-ma, e-music-ba) ; 2026-11-24-simple-spat-02 (e-music-ma). Documents sources : « Simple spat 02 · texte de la page » et « I am sitting in a room · texte de la page » (Claude Docs).
